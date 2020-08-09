@@ -17,7 +17,7 @@ const BookmarksService = {
     return knex.from("bookmarks_table").where("id", id).first();
   },
 
-  deleteArticle(knex, id) {
+  deleteBookmark(knex, id) {
       return knex("bookmarks_table").where({ id }).delete()
   }
 };

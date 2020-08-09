@@ -22,7 +22,6 @@ app.use(cors());
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-
 app.use(function validateBearerToken(req, res, next) {
   const apiToken = process.env.API_TOKEN;
   const authToken = req.get("Authorization");
@@ -57,6 +56,22 @@ app.get("/bookmarks/:id", (req, res, next) => {
     .catch(next);
 });
 
+app.delete("/bookmarks/:id", (req, res, next) => {
+  const { id } = req.params;
+  const knexInstance = req.app.get("db");
+
+  BookmarksService.deleteBookmark(knexInstance, id)
+    .then((bookmark) => {
+      if (!bookmark) {
+        return res.status(404).json({
+          error: { message: "Could not deleteekbookmark" },
+        });
+      }
+      res.json(bookmark);
+    })
+    .catch(next);
+});
+
 app.post("/bookmarks", (req, res, next) => {
   const { title, url, descriptions, rating } = req.body;
   if (!title) {
@@ -64,19 +79,9 @@ app.post("/bookmarks", (req, res, next) => {
     return res.status(400).send("invalid1, lol");
   }
 
-  if (!url) {
+  if (!url || !descriptions || !rating || !title) {
     logger.error("URL required");
     return res.status(400).send("invalid2, lol");
-  }
-
-  if (!descriptions) {
-    logger.error("descriptionS required");
-    return res.status(400).send("invalid3, lol");
-  }
-
-  if (!rating) {
-    logger.error("rating required");
-    return res.status(400).send("invalid4, lol");
   }
 
   const newBookmark = {
@@ -94,20 +99,20 @@ app.post("/bookmarks", (req, res, next) => {
     .catch(next);
 });
 
-app.delete("/bookmarks/:id", (req, res) => {
-  const { id } = req.params;
+// app.delete("/bookmarks/:id", (req, res) => {
+//   const { id } = req.params;
 
-  const bookmarksindex = bookmarks.findIndex((bi) => bi.id == id);
+//   const bookmarksindex = bookmarks.findIndex((bi) => bi.id == id);
 
-  if (bookmarksindex === -1) {
-    logger.error(`List with id ${id} not found`);
-    return res.status(404).send("Not found");
-  }
+//   if (bookmarksindex === -1) {
+//     logger.error(`List with id ${id} not found`);
+//     return res.status(404).send("Not found");
+//   }
 
-  bookmarks.splice(bookmarksindex, 1);
+//   bookmarks.splice(bookmarksindex, 1);
 
-  res.json(bookmarks);
-});
+//   res.json(bookmarks);
+// });
 
 app.use(function errorHandler(error, req, res, next) {
   let response;
