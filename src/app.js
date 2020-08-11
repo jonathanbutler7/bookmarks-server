@@ -24,16 +24,16 @@ app.use(cors());
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// app.use(function validateBearerToken(req, res, next) {
-//   const apiToken = process.env.API_TOKEN;
-//   const authToken = req.get("Authorization");
+app.use(function validateBearerToken(req, res, next) {
+  const apiToken = process.env.API_TOKEN;
+  const authToken = req.get("Authorization");
 
-//   if (!authToken || authToken.split(" ")[1] !== apiToken) {
-//     return res.status(401).json({ error: "Unauthorized request" });
-//   }
-//   // move to the next middleware
-//   next();
-// });
+  if (!authToken || authToken.split(" ")[1] !== apiToken) {
+    return res.status(401).json({ error: "Unauthorized request" });
+  }
+  // move to the next middleware
+  next();
+});
 
 app.get("/bookmarks", (req, res, next) => {
   const knexInstance = req.app.get("db");
@@ -74,13 +74,16 @@ app.delete("/bookmarks/:id", (req, res, next) => {
           error: { message: "Could not deleteekbookmark" },
         });
       }
-      res.json(bookmark);
+      res.status(204).json({
+        error: { message: "Success" },
+      });
     })
     .catch(next);
 });
 
 app.post("/bookmarks", (req, res, next) => {
   const newBookmark = {
+    // id: uuid(),
     title: xss(req.body.title),
     url: xss(req.body.url),
     descriptions: xss(req.body.descriptions),
@@ -96,9 +99,9 @@ app.post("/bookmarks", (req, res, next) => {
   }
   //sanitize id 41
   if (newBookmark.rating < 1 || newBookmark.rating > 5) {
-    return res.status(400).json({
-      error: { message: `Rating must be between 1 and 5` },
-    });
+    return res.status(400).json(
+      "success"
+    );
   }
 
   if (!newBookmark.url.includes(".com")) {
